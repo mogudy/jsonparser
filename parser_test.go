@@ -1139,7 +1139,7 @@ func TestGetInt(t *testing.T) {
 	runGetTests(t, "GetInt()", getIntTests,
 		func(test GetTest) (value interface{}, dataType ValueType, err error) {
 			value, err = GetInt([]byte(test.json), test.path...)
-			return value, Number, err
+			return value, Integer, err
 		},
 		func(test GetTest, value interface{}) (bool, interface{}) {
 			expected := test.data.(int64)
@@ -1288,18 +1288,20 @@ var objectEachTests = []ObjectEachTest{
 		json: `{
 		  "key1": null,
 		  "key2": true,
-		  "key3": 1.23,
-		  "key4": "string value",
-		  "key5": [1,2,3],
-		  "key6": {"a":"b"}
+		  "key3": 5,
+		  "key4": 1.23,
+		  "key5": "string value",
+		  "key6": [1,2,3],
+		  "key7": {"a":"b"}
 		}`,
 		entries: []keyValueEntry{
 			{"key1", "null", Null},
 			{"key2", "true", Boolean},
-			{"key3", "1.23", Number},
-			{"key4", "string value", String},
-			{"key5", "[1,2,3]", Array},
-			{"key6", `{"a":"b"}`, Object},
+			{"key3", "5", Integer},
+			{"key4", "1.23", Number},
+			{"key5", "string value", String},
+			{"key6", "[1,2,3]", Array},
+			{"key7", `{"a":"b"}`, Object},
 		},
 	},
 	{
@@ -1518,19 +1520,9 @@ var parseBoolTests = []ParseTest{
 
 var parseFloatTest = []ParseTest{
 	{
-		in:     "0",
-		intype: Number,
-		out:    float64(0),
-	},
-	{
 		in:     "0.0",
 		intype: Number,
 		out:    float64(0.0),
-	},
-	{
-		in:     "1",
-		intype: Number,
-		out:    float64(1),
 	},
 	{
 		in:     "1.234",
@@ -1562,14 +1554,27 @@ var parseFloatTest = []ParseTest{
 		intype: Number,
 		isErr:  true,
 	},
+}
+
+var parseIntTest = []ParseTest{
 	{
-		in:     "1a",
-		intype: Number,
-		isErr:  true,
+		in:     "0",
+		intype: Integer,
+		out:    int64(0),
+	},
+	{
+		in:     "1",
+		intype: Integer,
+		out:    int64(1),
 	},
 	{
 		in:     "",
-		intype: Number,
+		intype: Integer,
+		isErr:  true,
+	},
+	{
+		in:     "1a",
+		intype: Integer,
 		isErr:  true,
 	},
 }
@@ -1633,6 +1638,18 @@ func TestParseFloat(t *testing.T) {
 		func(test ParseTest, obtained interface{}) (bool, interface{}) {
 			expected := test.out.(float64)
 			return obtained.(float64) == expected, expected
+		},
+	)
+}
+
+func TestParseInt(t *testing.T) {
+	runParseTests(t, "ParseInt()", parseIntTest,
+		func(test ParseTest) (value interface{}, err error) {
+			return ParseInt([]byte(test.in))
+		},
+		func(test ParseTest, obtained interface{}) (bool, interface{}) {
+			expected := test.out.(int64)
+			return obtained.(int64) == expected, expected
 		},
 	)
 }

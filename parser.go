@@ -526,6 +526,7 @@ type ValueType int
 const (
 	NotExist = ValueType(iota)
 	String
+	Integer
 	Number
 	Object
 	Array
@@ -540,6 +541,8 @@ func (vt ValueType) String() string {
 		return "non-existent"
 	case String:
 		return "string"
+	case Integer:
+		return "integer"
 	case Number:
 		return "number"
 	case Object:
@@ -559,6 +562,7 @@ var (
 	trueLiteral  = []byte("true")
 	falseLiteral = []byte("false")
 	nullLiteral  = []byte("null")
+	dotLiteral  = []byte(".")
 )
 
 func createInsertComponent(keys []string, setValue []byte, comma, object bool) []byte {
@@ -821,7 +825,11 @@ func getType(data []byte, offset int) ([]byte, ValueType, int, error) {
 				return nil, Unknown, offset, UnknownValueTypeError
 			}
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-':
-			dataType = Number
+			if !bytes.Contains(value,dotLiteral) {
+				dataType = Integer
+			} else {
+				dataType = Number
+			}
 		default:
 			return nil, Unknown, offset, UnknownValueTypeError
 		}
@@ -1104,7 +1112,7 @@ func GetFloat(data []byte, keys ...string) (val float64, err error) {
 		return 0, e
 	}
 
-	if t != Number {
+	if t != Number && t != Integer {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
@@ -1120,7 +1128,7 @@ func GetInt(data []byte, keys ...string) (val int64, err error) {
 		return 0, e
 	}
 
-	if t != Number {
+	if t != Number && t != Integer {
 		return 0, fmt.Errorf("Value is not a number: %s", string(v))
 	}
 
